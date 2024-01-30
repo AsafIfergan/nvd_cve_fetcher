@@ -3,11 +3,12 @@ import os
 from datetime import timedelta, datetime
 import time
 import subprocess
-
+# import sys
+from utils.fetching_utils import generate_start_indices
 from utils.datetime_utils import get_dates, convert_date_to_iso_format
 from utils.request_utils import make_request_with_backoff
-from utils.fetching_utils import get_total_results, get_cves_from_response, save_results_to_jsons
-from utils.general_utils import log_message, create_directory_with_parents, print_divider
+from utils.fetching_utils import get_total_results_from_response, get_cves_from_response, save_results_to_jsons
+from utils.general_utils import log_message, create_directory_with_parents, print_divider, is_numeric
 
 """
 This script fetches data from the NVD API and saves it in json files.
@@ -25,34 +26,40 @@ def get_default_api_params():
 
 def fetch_and_save_data(endpoint: str, params: dict, output_directory: str, ratelimit_error_code=403) -> None:
     """
-        Fetches data from a specified endpoint with given parameters and saves it in the output directory.
+    Fetches data from a specified endpoint with given parameters and saves it in the output directory.
 
-        Args:
-            endpoint (str): The API endpoint to fetch data from.
-            params (dict): Parameters to be used in the API request.
-            output_directory (str): Directory where the fetched data will be saved.
-            ratelimit_error_code (int, optional): Error code to handle rate limiting. Defaults to 403.
+    Args:
+        endpoint (str): The API endpoint to fetch data from.
+        params (dict): Parameters to be used in the API request.
+        output_directory (str): Directory where the fetched data will be saved.
+        ratelimit_error_code (int, optional): Error code to handle rate limiting. Defaults to 403 for the NVD API.
+    """
 
-        Returns:
-            dict: A dictionary containing the results of the data fetch operation.
-        """
-
+    fetched_results = 0
+    total_results = fetch_only_total_results(endpoint, params=params, ratelimit_error_code=ratelimit_error_code)
     max_results_per_page = params['resultsPerPage']
-    total_results = 100  # arbitrary number to start loop
-    start_index = 1
 
-    while start_index <= total_results:
+    for start_index in generate_start_indices(max_results_per_page, total_results):  # this is a generator function
         params['startIndex'] = start_index
         response = make_request_with_backoff(endpoint, params=params,
-                                             ratelimit_error_code=ratelimit_error_code)  # 403 seems to be the error code for exceeded rate limits in this API
+                                             ratelimit_error_code=ratelimit_error_code)
         if not response:
             continue
 
         parsed_response = response.json()
-        total_results = get_total_results(parsed_response)
-        start_index += max_results_per_page
         cve_list = get_cves_from_response(parsed_response)
+        fetched_results += len(cve_list)
         save_results_to_jsons(cve_list=cve_list, output_directory=output_directory, items_per_json=max_results_per_page)
+
+    assert fetched_results == total_results, "fetched_results must be equal to total_results"
+
+def fetch_only_total_results(endpoint, params, ratelimit_error_code):
+    params_for_total_results = params.copy()
+    params_for_total_results['resultsPerPage'] = 1
+    initial_response = make_request_with_backoff(endpoint, params=params, ratelimit_error_code=ratelimit_error_code)
+    parsed_response = initial_response.json()
+    total_results = get_total_results_from_response(parsed_response)
+    return total_results
 
 
 def paginate_dates(start_date: datetime, end_date: datetime, max_days_per_request: int, base_url: str,
@@ -71,23 +78,16 @@ def paginate_dates(start_date: datetime, end_date: datetime, max_days_per_reques
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-directory", default=None, required=True, type=str)
-    parser.add_argument("--days-back", required=True, default=None)
+    parser.add_argument("--days-back", required=True, default=None, type=int)
 
     # these are flags - if they are present, they will be set to True. if they are not present, they will be set to False
     parser.add_argument("--verbose", required=False, default=False, action='store_true')
     parser.add_argument("--no-analysis", required=False, default=False, action='store_true')
     args = parser.parse_args()
-    args.days_back = int(args.days_back) if args.days_back.isdigit() else None
-    validate_args(args)  # this will raise an exception if the args are invalid
-    return args
-
-
-def validate_args(args):
-    assert isinstance(args.days_back, int), "days_back must be an integer"
+    days_back = is_numeric(args.days_back)
+    assert days_back, "days_back must be a numeric value"
     assert args.days_back > 0, "days_back must be greater than 0"
-    assert isinstance(args.verbose, bool), "verbose must be a boolean"
-    assert isinstance(args.no_analysis, bool), "run_analysis must be a boolean"
-    return True
+    return args
 
 
 def main():

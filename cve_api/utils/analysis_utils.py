@@ -1,7 +1,6 @@
 from collections import Counter
 
-from .general_utils import is_numeric_score, calculate_numeric_array_average
-
+from .general_utils import is_numeric, calculate_numeric_array_average
 
 def iterate_cves(loaded_json):
     for cve_object in loaded_json:
@@ -32,7 +31,7 @@ def get_analysis(json, metrics_to_get=('baseScore', 'baseSeverity')):
 
         if base_severity:
             base_severities[base_severity.lower()] += 1
-        base_score = is_numeric_score(base_score)
+        base_score = is_numeric(base_score)
         if base_score is not None:
             base_scores.append(base_score)
 
