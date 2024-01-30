@@ -2,14 +2,12 @@ import argparse
 import os
 from datetime import timedelta, datetime
 import time
-from utils.general_utils import print_divider
 import subprocess
 
 from utils.datetime_utils import get_dates, convert_date_to_iso_format
 from utils.request_utils import make_request_with_backoff
 from utils.fetching_utils import get_total_results, get_cves_from_response, save_results_to_jsons
-from utils.general_utils import log_message, create_directory_with_parents
-
+from utils.general_utils import log_message, create_directory_with_parents, print_divider
 
 """
 This script fetches data from the NVD API and saves it in json files.
@@ -17,6 +15,7 @@ The NVD API allows fetching data by date range, but the maximum allowed range is
 This limit of 120 days and the max 2000 results per page (as recommended in the documentation) can be changed in the get_default_api_params function.
 More about the NVD API: https://nvd.nist.gov/developers
 """
+
 
 def get_default_api_params():
     max_days_per_request = 120  # Maximum days allowed per request. Found out the hard way.
@@ -56,9 +55,9 @@ def fetch_and_save_data(endpoint: str, params: dict, output_directory: str, rate
         save_results_to_jsons(cve_list=cve_list, output_directory=output_directory, items_per_json=max_results_per_page)
 
 
-def paginate_dates(start_date: datetime, end_date: datetime, max_days_per_request: int, base_url: str, output_directory: str,
+def paginate_dates(start_date: datetime, end_date: datetime, max_days_per_request: int, base_url: str,
+                   output_directory: str,
                    verbose=True, params: dict = {}):
-
     while start_date < end_date:
         current_request_end_date = min(start_date + timedelta(days=max_days_per_request), end_date)
         log_message(verbose, f"Fetching CVEs published between {start_date} and {end_date}")
@@ -70,7 +69,6 @@ def paginate_dates(start_date: datetime, end_date: datetime, max_days_per_reques
 
 
 def get_args():
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-directory", default=None, required=True, type=str)
     parser.add_argument("--days-back", required=True, default=None)
@@ -80,18 +78,20 @@ def get_args():
     parser.add_argument("--no-analysis", required=False, default=False, action='store_true')
     args = parser.parse_args()
     args.days_back = int(args.days_back) if args.days_back.isdigit() else None
-    validate_args(args) # this will raise an exception if the args are invalid
+    validate_args(args)  # this will raise an exception if the args are invalid
     return args
 
-def validate_args(args):
 
+def validate_args(args):
     assert isinstance(args.days_back, int), "days_back must be an integer"
     assert args.days_back > 0, "days_back must be greater than 0"
     assert isinstance(args.verbose, bool), "verbose must be a boolean"
     assert isinstance(args.no_analysis, bool), "run_analysis must be a boolean"
     return True
 
+
 def main():
+    start_time = time.time()
     args = get_args()
     output_directory = os.path.join(args.output_directory, "cves")  # chose os over pathlib to reduce dependencies
     days_back = args.days_back
@@ -119,8 +119,10 @@ def main():
     if analyze:
         subprocess.run(['python', './cve_api/analyze.py', '--output-directory', output_directory])
 
-if __name__ == "__main__":
-    start_time = time.time()
-    main()
+    print_divider()
     end_time = time.time()
-    print(f"Total run time: {end_time - start_time} seconds")
+    log_message(verbose, f"Total runtime: {end_time - start_time} seconds")
+
+
+if __name__ == "__main__":
+    main()

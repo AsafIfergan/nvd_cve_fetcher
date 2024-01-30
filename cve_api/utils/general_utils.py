@@ -2,16 +2,20 @@ import json
 import os
 from typing import Union
 
+
 def print_divider():
     print("\n", "=" * 30, "\n")
+
 
 def log_message(verbose, message):
     """Log a message if verbose mode is enabled."""
     if verbose and message:
         print(message)
 
+
 def create_directory_with_parents(directory_path, exist_ok=True):
     os.makedirs(directory_path, exist_ok=exist_ok)
+
 
 def save_json(filepath: str, cve_list: list, verbose=False) -> None:
     """ saves a list of CVEs to a json file.
@@ -28,15 +32,17 @@ def save_json(filepath: str, cve_list: list, verbose=False) -> None:
         log_message(verbose, f"Failed to save results to {filepath}")
         print(e)
 
+
 def yield_list_chunks(all_cves: list, chunk_size: int = 50) -> list:
     """ a generator function that yields a chunk of a list of elements.
     Args:
         all_cves (list): list of elements to be divided into chunks
         chunk_size (int, optional): size of each chunk. Defaults to 50 as required"""
     list_of_chunks = []
-    for i in range(0, len(all_cves), chunk_size): # range takes a start, stop, and step as args and not kwargs. if you don't specify a start, it defaults to 0
-        list_of_chunks.append(all_cves[i:i+chunk_size])
-        yield all_cves[i:i+chunk_size]
+    for i in range(0, len(all_cves),
+                   chunk_size):  # range takes a start, stop, and step as args and not kwargs. if you don't specify a start, it defaults to 0
+        list_of_chunks.append(all_cves[i:i + chunk_size])
+        yield all_cves[i:i + chunk_size]
 
 
 def load_json(file_path: str):
@@ -45,11 +51,13 @@ def load_json(file_path: str):
 
 
 def load_jsons_from_directory(directory_path: str):
-    for root, dirs, files in os.walk(directory_path, topdown=False): # os.walk allows to find jsons in nested directories
+    for root, dirs, files in os.walk(directory_path,
+                                     topdown=False):  # os.walk allows to find jsons in nested directories
         for file in files:
             if file.endswith(".json"):
                 filepath = os.path.join(root, file)
                 yield load_json(filepath)
+
 
 def is_numeric_score(score: Union[int, float, str]):
     try:
@@ -62,6 +70,7 @@ def is_numeric_score(score: Union[int, float, str]):
         except Exception:
             # If both conversions fail, return None or raise an exception
             return None
+
 
 def calculate_numeric_array_average(numeric_list: Union[list, tuple], clean_array=True):
     """Calculate the average of a list or tuple of numeric values."""

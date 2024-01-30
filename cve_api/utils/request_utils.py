@@ -61,5 +61,6 @@ def make_request_with_backoff(url, method='GET', headers=None, params=None, data
     log_message(verbose, "Max retries reached. Aborting...")
     return None
 
+
 def rate_limit_reached(ratelimit_error_code, status_code):
     return ratelimit_error_code is not None and status_code == ratelimit_error_code
