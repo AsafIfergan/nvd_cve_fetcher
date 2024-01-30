@@ -53,7 +53,6 @@ def validate_results(total_average, severities, top_affected_packages):
     assert isinstance(severities, dict), "severities must be a dictionary"
     assert isinstance(top_affected_packages, list), "top_affected_packages must be a list"
     assert all(isinstance(item, tuple) for item in top_affected_packages), "top_affected_packages must be a list of tuples"
-    # assert len(severities) > 0, "no severities found"
 
 def main():
     args = get_args()

@@ -1,17 +1,10 @@
 import os
-from .general_utils import save_json, yield_list_chunks
+from .general_utils import save_json, yield_list_chunks, is_numeric
 
 
-def get_total_results(parsed_response: dict) -> int:
-    # TODO: unit test this function
+def get_total_results_from_response(parsed_response: dict) -> int:
     total_results = parsed_response.get('totalResults', None)
-    if total_results is None:
-        return 0
-
-    if isinstance(total_results, str):
-        if total_results.isdigit():
-            return int(total_results)
-    elif isinstance(total_results, (int, float)):
+    if is_numeric(total_results):
         return int(total_results)
 
 
@@ -47,3 +40,9 @@ def get_first_and_last_cve_publish_date(chunk: list) -> None:
     last_cve_publish_date = chunk[-1].get('cve').get('published', None)
 
     return first_cve_publish_date, last_cve_publish_date
+
+
+def generate_start_indices(max_results_per_page, total_results):
+    for start_index in range(0, total_results + 1, max_results_per_page):
+        yield start_index
+

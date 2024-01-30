@@ -59,22 +59,19 @@ def load_jsons_from_directory(directory_path: str):
                 yield load_json(filepath)
 
 
-def is_numeric_score(score: Union[int, float, str]):
+def is_numeric(item: Union[int, float, str]):
     try:
-        # Try converting to an int first
-        return int(score)
-    except Exception:
-        # If int conversion fails, try float conversion
-        try:
-            return float(score)
-        except Exception:
-            # If both conversions fail, return None or raise an exception
-            return None
+        item = float(item)
+        return item
+    except ValueError:
+        return False
 
 
-def calculate_numeric_array_average(numeric_list: Union[list, tuple], clean_array=True):
+def calculate_numeric_array_average(array: Union[list, tuple], clean_array=True):
     """Calculate the average of a list or tuple of numeric values."""
     if clean_array:
-        numeric_list = [item for item in numeric_list if isinstance(item, (int, float))]
-    assert all(isinstance(item, (int, float)) for item in numeric_list), "All items in the array must be numeric"
-    return sum(numeric_list) / len(numeric_list) if len(numeric_list) > 0 else None
+        array = [item for item in array if is_numeric(item)]
+    assert all(isinstance(item, (int, float)) for item in array), "All items in the array must be numeric"
+    if not array:
+        return 0
+    return sum(array) / len(array)
