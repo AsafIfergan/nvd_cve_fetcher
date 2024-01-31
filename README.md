@@ -11,7 +11,8 @@ Setup
 Docker (Recommended)  
 
 Build the Docker image:  ***docker build -t container:tag .<sub>***  
-Run the container:  ***docker run -m 512m container:tag [output_directory] [days_back]***  
+Run the container:  ***docker run container:tag [output_directory] [days_back]***  
+You can run with -m 512m to limit memory usage  
 _The default parameters set in the Dockerfile are /tmp for output_directory and 180 for days_back_
 ### Manual Setup
 
