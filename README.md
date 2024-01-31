@@ -5,8 +5,8 @@ The CVE Data Analysis Tool is meticulously crafted to retrieve and scrutinize Co
 It efficiently delivers comprehensive insights, such as the average base score of vulnerabilities, a detailed severity classification, and highlights the top five most affected software packages.  
 
 ## Components
-- `fetch_cves.py`: Retrieves CVE data from the NVD.  
-- `analyze.py`: Analyzes the retrieved CVE data for detailed insights.  
+- `cve_fetcher.py`: Retrieves CVE data from the NVD.  
+- `cve_analyzer.py`: Analyzes the retrieved CVE data for detailed insights.  
 - `Dockerfile`: Facilitates the creation of a Docker container for seamless execution.  
 - `requirements.txt`: Enumerates the necessary Python dependencies for the tool.  
 
@@ -18,16 +18,16 @@ It efficiently delivers comprehensive insights, such as the average base score o
 
 ### Manual Setup
 - **Install dependencies**: Run `pip install -r requirements.txt`.
-- **Execute scripts**: Use `python fetch_cves.py --output-directory [output_directory] --days-back [days_back]` and `python analyze.py --output-directory [output_directory]`.
+- **Execute scripts**: Use `python cve_fetcher.py --output-directory [output_directory] --days-back [days_back]` and `python cve_analyzer.py --output-directory [output_directory]`.
 
 ## Usage
-### fetch_cves.py
+### cve_fetcher.py
 - `--output-directory`: Sets the directory to save fetched CVE data.
 - `--days-back`: Defines the time frame for fetching data.
 - `--verbose`: Enables more detailed logging with prints.
 - `--no-analysis`: Opts out of analysis post-data retrieval.
 
-### analyze.py
+### cve_analyzer.py
 - `--output-directory`: Specifies the directory containing CVE data for analysis.
 
 ## Contributing
