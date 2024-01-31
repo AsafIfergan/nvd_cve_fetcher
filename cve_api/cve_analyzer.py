@@ -2,7 +2,11 @@ import argparse
 from collections import Counter
 
 from utils.analysis_utils import get_analysis
-from utils.general_utils import print_divider, load_jsons_from_directory, calculate_numeric_array_average
+from utils.general_utils import (
+    print_divider,
+    load_jsons_from_directory,
+    calculate_numeric_array_average,
+)
 
 
 def get_jsons_analysis(path_to_jsons, n_top_affected_packages: int = 5):
@@ -12,7 +16,11 @@ def get_jsons_analysis(path_to_jsons, n_top_affected_packages: int = 5):
 
     json_loader = load_jsons_from_directory(path_to_jsons)  # generator function
     for loaded_json in json_loader:
-        average_base_score, current_severities, current_affected_packages = get_analysis(loaded_json)
+        (
+            average_base_score,
+            current_severities,
+            current_affected_packages,
+        ) = get_analysis(loaded_json)
         all_severities = all_severities + current_severities
         affected_packages = affected_packages + current_affected_packages
         score_averages.append(average_base_score)
@@ -29,11 +37,12 @@ def get_args():
     return args
 
 
-def print_analysis_results(total_average, severities, top_affected_packages, n_top_affected_packages):
+def print_analysis_results(
+    total_average, severities, top_affected_packages, n_top_affected_packages
+):
 
     validate_results(total_average, severities, top_affected_packages)
     print_divider()
-    assert total_average
     print(f"Base score average for analysed vulnerabilities: {total_average}")
     print_divider()
     print("Severity breakdown for analysed vulnerabilities:")
@@ -43,25 +52,38 @@ def print_analysis_results(total_average, severities, top_affected_packages, n_t
     else:
         print("No severity data found")
     print_divider()
-    print(f"Top {n_top_affected_packages} affected packages in analysed vulnerabilities:\n")
+    print(
+        f"Top {n_top_affected_packages} affected packages in analysed vulnerabilities:\n"
+    )
     for package_name, count in top_affected_packages:
         print(f"{package_name}: {count}")
 
 
 def validate_results(total_average, severities, top_affected_packages):
-    assert isinstance(total_average, (int, float)), "total_average must be a numeric value"
-    assert isinstance(severities, dict), "severities must be a dictionary"
-    assert isinstance(top_affected_packages, list), "top_affected_packages must be a list"
-    assert all(isinstance(item, tuple) for item in top_affected_packages), "top_affected_packages must be a list of tuples"
+    if not isinstance(total_average, (int, float)):
+        raise ValueError("total_average must be a numeric value")
+    if not isinstance(severities, dict):
+        raise ValueError("severities must be a dictionary")
+    if not isinstance(top_affected_packages, list):
+        raise ValueError("top_affected_packages must be a list")
+    if not all(isinstance(item, tuple) for item in top_affected_packages):
+        raise ValueError("top_affected_packages must be a list of tuples")
+
+
+def run_analysis(output_directory, n_top_affected_packages: int = 5):
+    total_average, severities, top_affected_packages = get_jsons_analysis(
+        output_directory, n_top_affected_packages=n_top_affected_packages
+    )
+    print_analysis_results(
+        total_average, severities, top_affected_packages, n_top_affected_packages
+    )
+
 
 def main():
     args = get_args()
-    n_top_affected_packages = 5
     output_directory = args.output_directory
-    total_average, severities, top_affected_packages = get_jsons_analysis(output_directory,
-                                                                          n_top_affected_packages=n_top_affected_packages)
-    print_analysis_results(total_average, severities, top_affected_packages, n_top_affected_packages)
+    run_analysis(output_directory)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

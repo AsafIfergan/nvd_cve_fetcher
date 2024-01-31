@@ -1,7 +1,6 @@
 import unittest
 from cve_api.utils.fetching_utils import (
     get_total_results_from_response,
-    save_results_to_jsons,
     generate_start_indices,
 )
 
